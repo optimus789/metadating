@@ -38,8 +38,8 @@ interface RegisterModalProps {
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 	const { status, connect, account, chainId } = useMetaMask();
-  const [isActive, setIsActive] = useState(false);
-  const {
+	const [isActive, setIsActive] = useState(false);
+	const {
 		register,
 		handleSubmit,
 		control,
@@ -189,13 +189,18 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 									);
 								}
 								if (verifyStatus) {
-                  setIsActive(!isActive);
+									setIsActive(!isActive);
 								}
 								// const verifyStatus = await verifyWorldId();
 							}}
 							onError={(error) => console.error(error)}
 						/>
-						<Button disabled={!isActive} colorScheme="pink" form="register-form" type="submit">
+						<Button
+							disabled={!isActive}
+							colorScheme="pink"
+							form="register-form"
+							type="submit"
+						>
 							Submit
 						</Button>
 					</VStack>

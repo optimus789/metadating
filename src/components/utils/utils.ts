@@ -31,7 +31,7 @@ export async function verifyWorldId(
 		}
 	);
 	const data = await response.json();
-	if(data?.code === 'already_verified'){
+	if (data?.code === 'already_verified') {
 		alert(data?.detail);
 	}
 	return data?.success === true ? true : false;
