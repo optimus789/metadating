@@ -3,7 +3,6 @@ import { useMetaMask } from "metamask-react";
 
 const MetamaskNav: React.FC = ({}) => {
   const { status, connect, account, chainId } = useMetaMask();
-
   if (status === "notConnected") {
     return (
       <Button onClick={connect} colorScheme='cyan' color='white'>
