@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { WidgetProps } from '@worldcoin/id';
 import { useMetaMask } from 'metamask-react';
 import dynamic from 'next/dynamic';
+import { EncodedURL } from 'nft.storage/dist/src/lib/interface';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -29,7 +30,12 @@ import ProfilePicInput from '../register-form/ProfilePicInput';
 import RegisterInput from '../register-form/RegisterInput';
 import RegisterTextarea from '../register-form/RegisterTextarea';
 import SexInput from '../register-form/SexInput';
-import { verifyWorldId } from '../utils/utils';
+import {
+	createMetadatOnIpfs,
+	getImagesMetadata,
+	mintNFTs,
+	verifyWorldId,
+} from '../utils/utils';
 
 interface RegisterModalProps {
 	isOpen: boolean;
@@ -37,7 +43,7 @@ interface RegisterModalProps {
 }
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
-	const { status, connect, account, chainId } = useMetaMask();
+	const { account } = useMetaMask();
 	const [isActive, setIsActive] = useState(false);
 	const {
 		register,
@@ -54,14 +60,39 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 	);
 	const actionId: string = String(process.env.NEXT_PUBLIC_WORLDID_ACTION_ID);
 
-	const onSubmit = handleSubmit((values: registerInput) => {
-		console.log(`Values:`, values);
-		console.log('account', account);
-
+	const onSubmit = handleSubmit(async (values: registerInput) => {
 		if (!values.profilePic) {
 			setError('profilePic', { message: 'Profile picture is required' });
 		}
-		console.log(values);
+		console.log(`Values:`, values);
+		console.log('account', account);
+		const favNftsTokenId = [
+			values['favNFT1-tokenID'],
+			values['favNFT2-tokenID'],
+			values['favNFT3-tokenID'],
+		];
+		const favNftsContractAddr = [
+			values['favNFT1-contractAddress'],
+			values['favNFT2-contractAddress'],
+			values['favNFT3-contractAddress'],
+		];
+		const imagesMetadata: string[] | boolean = await getImagesMetadata(
+			favNftsTokenId,
+			favNftsContractAddr
+		);
+		if (!imagesMetadata) return;
+
+		const metadataUri: EncodedURL | boolean = await createMetadatOnIpfs(values, imagesMetadata);
+		console.log('Final Metadata URI', metadataUri);
+
+		const nftMinted = await mintNFTs(metadataUri, account);
+		console.log('NFT Minted', nftMinted);
+		if(nftMinted){
+			alert('NFT Minted Successfully');
+			onClose();
+			
+		}
+
 	});
 
 	return (
