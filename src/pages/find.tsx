@@ -19,7 +19,9 @@ import { user } from '../utils/types';
 const FindPage: NextPage = () => {
 	const [users, setUsers] = useState<user[] | null>(null);
 	const [value, setValue] = useState('');
-	const [sex, setSex] = useState<'male' | 'female' | undefined>(undefined);
+	const [sex, setSex] = useState<'male' | 'female' | 'transgender' | undefined>(
+		undefined
+	);
 	const [country, setCountry] = useState('');
 
 	const resetFilter = () => {
@@ -30,14 +32,8 @@ const FindPage: NextPage = () => {
 	};
 
 	return (
-		<VStack minH="100vh" bgColor="blackAlpha.900" pt={15} spacing={7}>
-			<HStack
-				pos="absolute"
-				top={0}
-				left={0}
-				right={0}
-				justifyContent="flex-end"
-			>
+		<VStack minH="100vh" bgColor="blackAlpha.900" pt={14} spacing={7}>
+			<HStack pos="fixed" top={0} left={0} right={0} justifyContent="flex-end">
 				<Box mt={6} mr={6}>
 					<MetamaskNav />
 				</Box>

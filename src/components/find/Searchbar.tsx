@@ -18,8 +18,10 @@ interface SearchbarProps {
 	setUsers: Dispatch<SetStateAction<user[] | null>>;
 	value: string;
 	setValue: Dispatch<SetStateAction<string>>;
-	sex: 'male' | 'female' | undefined;
-	setSex: Dispatch<SetStateAction<'male' | 'female' | undefined>>;
+	sex: 'male' | 'female' | 'transgender' | undefined;
+	setSex: Dispatch<
+		SetStateAction<'male' | 'female' | 'transgender' | undefined>
+	>;
 	country: string;
 	setCountry: Dispatch<SetStateAction<string>>;
 }
@@ -41,7 +43,7 @@ const Searchbar: React.FC<SearchbarProps> = ({
 				user.name.toUpperCase().includes(value) ||
 				user.name.includes(value)
 		);
-		if (sex === 'male' || sex === 'female') {
+		if (sex === 'male' || sex === 'female' || sex === 'transgender') {
 			users = users.filter((user) => user.sex === sex);
 		}
 		if (country !== '') {
@@ -103,6 +105,9 @@ const Searchbar: React.FC<SearchbarProps> = ({
 							</Radio>
 							<Radio value="female" colorScheme="pink">
 								Female
+							</Radio>
+							<Radio value="transgender" colorScheme="pink">
+								Transgender
 							</Radio>
 						</HStack>
 					</RadioGroup>

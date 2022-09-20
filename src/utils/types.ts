@@ -5,3 +5,12 @@ export type user = registerInput & {
 	nft2Img: any;
 	nft3Img: any;
 };
+
+export type request = {
+	from: user;
+	createdAt: Date;
+};
+
+export type userProfile = user & {
+	requests: request[];
+};

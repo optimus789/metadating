@@ -24,7 +24,7 @@ const SexInput: React.FC<SexInputProps> = ({
 	const errorMessage = 'Choose your sex';
 
 	return (
-		<FormControl w={150} isInvalid={isError}>
+		<FormControl w={290} isInvalid={isError}>
 			<FormLabel ml={1} color="cyan.400">
 				Sex
 			</FormLabel>
@@ -40,6 +40,13 @@ const SexInput: React.FC<SexInputProps> = ({
 					</Radio>
 					<Radio value="female" {...register(registerName)} colorScheme="pink">
 						Female
+					</Radio>
+					<Radio
+						value="transgender"
+						{...register(registerName)}
+						colorScheme="pink"
+					>
+						Transgender
 					</Radio>
 				</HStack>
 			</RadioGroup>
