@@ -116,7 +116,7 @@ export async function mintNFTs(
 	try {
 		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
 		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
-		console.log(nftPortKey,contractAddress)
+		console.log(nftPortKey, contractAddress);
 		const response = await fetch(
 			`https://api.nftport.xyz/v0/mints/customizable`,
 			{
@@ -139,5 +139,55 @@ export async function mintNFTs(
 	} catch (error) {
 		console.log(error);
 		return false;
+	}
+}
+
+// function to fetch contract nfts using nftport API
+export async function getNFTs() {
+	try {
+		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
+		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
+		const response = await fetch(
+			`https://api.nftport.xyz/v0/nfts/${contractAddress}?chain=polygon`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: nftPortKey,
+				},
+			}
+		);
+		const data = await response.json();
+		console.log('data', data);
+		let res;
+		if (data?.response === 'OK' && data?.nfts.length) {
+			let nfts: any[] = data?.nfts;
+			res = nfts.map((nft, i) => {
+				return {
+					name: nft[i]?.name,
+					description: nft[i]?.description,
+					profilePic: nft[i]?.image,
+					'favNFT1-tokenID': 'null',
+					'favNFT1-contractAddress': 'null',
+					'favNFT2-tokenID': 'null',
+					'favNFT2-contractAddress': 'null',
+					'favNFT3-tokenID': 'null',
+					'favNFT3-contractAddress': 'null',
+					nft1Img: nft[i]?.properties?.fav_nfts_images[0],
+					nft2Img: nft[i]?.properties?.fav_nfts_images[1],
+					nft3Img: nft[i]?.properties?.fav_nfts_images[2],
+					age: nft[i]?.properties?.age,
+					sex: nft[i]?.properties?.sex,
+					country: nft[i]?.properties?.country,
+					city: nft[i]?.properties?.city,
+				};
+			});
+			console.log('consoling res data for nfts: ', res);
+			return res;
+		}
+		return [];
+	} catch (error) {
+		console.log(error);
+		return [];
 	}
 }

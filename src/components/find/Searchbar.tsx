@@ -12,7 +12,8 @@ import {
 import { useMetaMask } from 'metamask-react';
 import { Dispatch, SetStateAction } from 'react';
 import { mockUsers } from '../../utils/mock-data';
-import { user } from '../../utils/types';
+import { nft, user } from '../../utils/types';
+import { getNFTs } from '../utils/utils';
 
 interface SearchbarProps {
 	setUsers: Dispatch<SetStateAction<user[] | null>>;
@@ -35,26 +36,30 @@ const Searchbar: React.FC<SearchbarProps> = ({
 	country,
 	setCountry,
 }) => {
-	const handleOnClick = () => {
-		//fetch users logic
-		let users = mockUsers.filter(
-			(user) =>
-				user.name.toLocaleLowerCase().includes(value) ||
-				user.name.toUpperCase().includes(value) ||
-				user.name.includes(value)
-		);
-		if (sex === 'male' || sex === 'female' || sex === 'transgender') {
-			users = users.filter((user) => user.sex === sex);
-		}
-		if (country !== '') {
-			users = users.filter(
+	const handleOnClick = async () => {
+		try {
+			let mintedNfts: user[] | [] = await getNFTs();
+			let users = mintedNfts.filter(
 				(user) =>
-					user.country.toLocaleLowerCase().includes(country) ||
-					user.country.toUpperCase().includes(country) ||
-					user.country.includes(country)
+					user.name.toLocaleLowerCase().includes(value) ||
+					user.name.toUpperCase().includes(value) ||
+					user.name.includes(value)
 			);
+			if (sex === 'male' || sex === 'female' || sex === 'transgender') {
+				users = users.filter((user) => user.sex === sex);
+			}
+			if (country !== '') {
+				users = users.filter(
+					(user) =>
+						user.country.toLocaleLowerCase().includes(country) ||
+						user.country.toUpperCase().includes(country) ||
+						user.country.includes(country)
+				);
+			}
+			setUsers(users);
+		} catch (error) {
+			console.log(error);
 		}
-		setUsers(users);
 	};
 
 	const { status } = useMetaMask();

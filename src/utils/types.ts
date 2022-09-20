@@ -6,6 +6,19 @@ export type user = registerInput & {
 	nft3Img: any;
 };
 
+export type nft = {
+	name: string;
+	description: string;
+	properties:{
+		age: Number;
+		sex: string;
+		city: string;
+		country: string;
+		fav_nfts_images: string[];
+	};
+	image: string[]
+}
+
 export type request = {
 	from: user;
 	createdAt: Date;

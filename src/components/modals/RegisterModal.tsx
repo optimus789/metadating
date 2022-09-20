@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { WidgetProps } from '@worldcoin/id';
 import { useMetaMask } from 'metamask-react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/router';
 import { EncodedURL } from 'nft.storage/dist/src/lib/interface';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -44,6 +45,7 @@ interface RegisterModalProps {
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 	const { account } = useMetaMask();
+	const router = useRouter();
 	const [isActive, setIsActive] = useState(false);
 	const {
 		register,
@@ -82,17 +84,19 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 		);
 		if (!imagesMetadata) return;
 
-		const metadataUri: EncodedURL | boolean = await createMetadatOnIpfs(values, imagesMetadata);
+		const metadataUri: EncodedURL | boolean = await createMetadatOnIpfs(
+			values,
+			imagesMetadata
+		);
 		console.log('Final Metadata URI', metadataUri);
 
 		const nftMinted = await mintNFTs(metadataUri, account);
 		console.log('NFT Minted', nftMinted);
-		if(nftMinted){
+		if (nftMinted) {
 			alert('NFT Minted Successfully');
 			onClose();
-			
+			router.push('/find');
 		}
-
 	});
 
 	return (
