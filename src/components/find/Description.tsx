@@ -14,7 +14,7 @@ const Description: React.FC<DescriptionProps> = ({ description }) => {
 			: description.slice(0, 200).trim() + '...';
 
 	return (
-		<VStack w="full" pt={3} spacing={2} minH="215px">
+		<VStack w="full" pt={3} spacing={2} minH="80px">
 			<Text
 				fontSize="xl"
 				fontWeight="semibold"

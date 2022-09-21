@@ -23,6 +23,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -42,6 +43,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -61,6 +63,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -80,6 +83,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -99,6 +103,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -118,6 +123,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -137,6 +143,7 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 	{
 		profilePic: default_img,
@@ -156,5 +163,6 @@ export const mockUsers: user[] = [
 		nft1Img: nftImg1,
 		nft2Img: nftImg2,
 		nft3Img: nftImg3,
+		tokenId: '111',
 	},
 ];

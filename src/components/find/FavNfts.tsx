@@ -1,5 +1,6 @@
 import { VStack, Text, HStack } from '@chakra-ui/react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface FavNftsProps {
 	nft1Img: any;
@@ -8,12 +9,11 @@ interface FavNftsProps {
 	size?: number;
 	textFontSize?: string;
 }
-
 const FavNfts: React.FC<FavNftsProps> = ({
 	nft1Img,
 	nft2Img,
 	nft3Img,
-	size = 45,
+	size = 70,
 	textFontSize = 'xl',
 }) => {
 	return (
@@ -28,9 +28,21 @@ const FavNfts: React.FC<FavNftsProps> = ({
 				Favourite NFTs
 			</Text>
 			<HStack justifyContent="space-between" w="90%" pt={2}>
-				<Image alt="nft-1-img" height={size} width={size} src={nft1Img} />
-				<Image alt="nft-2-img" height={size} width={size} src={nft2Img} />
-				<Image alt="nft-3-img" height={size} width={size} src={nft3Img} />
+				<Link key={nft1Img} href={nft1Img}>
+					<a target="_blank">
+						<Image alt="nft-1-img" height={size} width={size} src={nft1Img} />
+					</a>
+				</Link>
+				<Link key={nft2Img} href={nft2Img}>
+					<a target="_blank">
+						<Image alt="nft-2-img" height={size} width={size} src={nft2Img} />
+					</a>
+				</Link>
+				<Link key={nft3Img} href={nft3Img}>
+					<a target="_blank">
+						<Image alt="nft-3-img" height={size} width={size} src={nft3Img} />
+					</a>
+				</Link>
 			</HStack>
 		</VStack>
 	);

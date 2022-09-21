@@ -4,20 +4,8 @@ export type user = registerInput & {
 	nft1Img: any;
 	nft2Img: any;
 	nft3Img: any;
+	tokenId: string;
 };
-
-export type nft = {
-	name: string;
-	description: string;
-	properties:{
-		age: Number;
-		sex: string;
-		city: string;
-		country: string;
-		fav_nfts_images: string[];
-	};
-	image: string[]
-}
 
 export type request = {
 	from: user;

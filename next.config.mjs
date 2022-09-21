@@ -7,10 +7,18 @@
  * @constraint {{import('next').NextConfig}}
  */
 function defineNextConfig(config) {
-  return config;
+	return config;
 }
 
 export default defineNextConfig({
-  reactStrictMode: true,
-  swcMinify: true,
+	reactStrictMode: true,
+	images: {
+		domains: [
+			'ipfs.io',
+			'cloudflare-ipfs.com',
+			'ikzttp.mypinata.cloud',
+			'live---metadata-5covpqijaa-uc.a.run.app',
+		], // <== Domain name
+	},
+	swcMinify: true,
 });

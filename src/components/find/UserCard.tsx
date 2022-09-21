@@ -13,7 +13,7 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 
 	const handleUserCardClick = () => {
 		setRequestSent(true);
-		console.log(`user ${user.name} clicked`);
+		console.log(`user ${user.tokenId} clicked`);
 	};
 
 	return (

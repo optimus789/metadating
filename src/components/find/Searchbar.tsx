@@ -12,7 +12,7 @@ import {
 import { useMetaMask } from 'metamask-react';
 import { Dispatch, SetStateAction } from 'react';
 import { mockUsers } from '../../utils/mock-data';
-import { nft, user } from '../../utils/types';
+import { user } from '../../utils/types';
 import { getNFTs } from '../utils/utils';
 
 interface SearchbarProps {
