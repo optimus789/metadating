@@ -60,7 +60,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 		() => import('@worldcoin/id').then((mod) => mod.WorldIDWidget),
 		{ ssr: false }
 	);
-	const actionId: string = String(process.env.NEXT_PUBLIC_WORLDID_ACTION_ID);
+	const actionId = String(process.env.NEXT_PUBLIC_WORLDID_ACTION_ID);
 
 	const onSubmit = handleSubmit(async (values: registerInput) => {
 		if (!values.profilePic) {
@@ -213,7 +213,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 							enableTelemetry
 							onSuccess={async (res) => {
 								console.log(res);
-								let verifyStatus: Boolean = false;
+								let verifyStatus = false;
 								if (res) {
 									verifyStatus = await verifyWorldId(
 										res.proof,

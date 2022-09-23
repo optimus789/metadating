@@ -38,8 +38,8 @@ export async function getImagesMetadata(
 	contractAddress: string[]
 ) {
 	try {
-		let imagesMetadata: any[] = [];
-		let errorCaught: boolean = false;
+		const imagesMetadata: any[] = [];
+		let errorCaught = false;
 		for (let i = 0; i < nftTokenIds.length; i++) {
 			const nftMetadata = await getMetadata(nftTokenIds[i], contractAddress[i]);
 			if (nftMetadata === false) {
@@ -221,10 +221,10 @@ export async function getNFTs(userAddress: string | null) {
 		);
 		const data = await response.json();
 		console.log('data', data);
-		let res = [];
+		const res = [];
 		const tokenId = await getTokenOfOwner(userAddress);
 
-		let nfts: any[] = data?.data?.items || [];
+		const nfts: any[] = data?.data?.items || [];
 		if (nfts.length) {
 			for (let i = 0; i < nfts.length; i++) {
 				const nft = nfts[i];
@@ -263,7 +263,7 @@ async function getExternalMetadata(tokenId: string, contractId: string) {
 		const data = await response.json();
 		console.log(`data for token id ${tokenId}`, data);
 		if (data?.response === 'OK') {
-			let nft = data?.nft;
+			const nft = data?.nft;
 			return {
 				name: nft?.metadata?.name,
 				description: nft?.metadata?.description,
