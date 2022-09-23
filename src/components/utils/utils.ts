@@ -1,3 +1,4 @@
+import { connect } from '@tableland/sdk';
 import { ethers } from 'ethers';
 import { NFTStorage } from 'nft.storage';
 import { EncodedURL } from 'nft.storage/dist/src/lib/interface';
@@ -5,6 +6,15 @@ import { abi } from '../../utils/abi';
 import { registerInput } from '../../utils/schemas/register.schema';
 import { user } from '../../utils/types';
 
+export const tableland = connect({
+	chain: 'polygon-mumbai',
+});
+const provider = new ethers.providers.JsonRpcProvider(
+	process.env.NEXT_PUBLIC_POLYGON_URL || ''
+);
+const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
+
+const contract = new ethers.Contract(contractAddress, abi, provider);
 async function getMetadata(nftTokenId: any, contractAddress: any) {
 	try {
 		// get metadata from contract using Covalent API
@@ -196,7 +206,7 @@ export async function mintNFTs(
 // }
 
 // function to fetch contract nfts using covalent API
-export async function getNFTs() {
+export async function getNFTs(userAddress: string | null) {
 	try {
 		const covalentKey = process.env.NEXT_PUBLIC_COVALENT_API_KEY || '';
 		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
@@ -212,16 +222,20 @@ export async function getNFTs() {
 		const data = await response.json();
 		console.log('data', data);
 		let res = [];
+		const tokenId = await getTokenOfOwner(userAddress);
+
 		let nfts: any[] = data?.data?.items || [];
 		if (nfts.length) {
 			for (let i = 0; i < nfts.length; i++) {
 				const nft = nfts[i];
-				let metadata: user | boolean = await getExternalMetadata(
-					nft?.token_id,
-					contractAddress
-				);
-				if (metadata !== false) {
-					res.push(metadata);
+				if (nft?.token_id !== tokenId) {
+					const metadata: user | boolean = await getExternalMetadata(
+						nft?.token_id,
+						contractAddress
+					);
+					if (metadata !== false) {
+						res.push(metadata);
+					}
 				}
 			}
 		}
@@ -283,16 +297,112 @@ async function getExternalMetadata(tokenId: string, contractId: string) {
 // function get the owner of tokenid using etherjs
 export async function getOwnerOfToken(tokenId: string) {
 	try {
-		const provider = new ethers.providers.JsonRpcProvider(
-			process.env.NEXT_PUBLIC_POLYGON_URL || ''
-		);
-		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
-		const contract = new ethers.Contract(contractAddress, abi, provider);
 		const owner = await contract.ownerOf(tokenId);
-		console.log(`owner of token ${tokenId} is: `, owner);
-		return owner;
+		return owner.toLowerCase();
 	} catch (error) {
 		console.log(error);
 		return '';
 	}
 }
+
+// function get the tokenid Of Owner using etherjs
+export async function getTokenOfOwner(address: string | null) {
+	try {
+		const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
+		console.log(`tokenId of ${address} is: `, tokenId);
+		return String(tokenId);
+	} catch (error) {
+		return ' ';
+	}
+}
+
+// function to send the requests to API
+export async function sendRequest(
+	requesteeAddress: string,
+	requestObj: string,
+	insertQuery: boolean
+) {
+	try {
+		let response;
+		if (insertQuery) {
+			// tableland backend api POST insert query
+			response = await fetch(
+				'https://tableland-backend.herokuapp.com/api/insert',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						requesteeAddress,
+						requestObj,
+					}),
+				}
+			);
+		} else {
+			response = await fetch(`/api/request`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					address: requesteeAddress,
+					requestObj,
+				}),
+			});
+		}
+
+		const data = await response.json();
+		console.log('data for insert/update tableland query', data);
+		return data;
+	} catch (error) {
+		console.log(error);
+		return { message: error };
+	}
+}
+
+// function to get the requests from API
+export async function getRequests(userAddress: string | null) {
+	try {
+		if (null) return;
+		const response = await fetch(`/api/request`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				userAddress,
+			}),
+		});
+		const data = await response.json();
+		console.log('data', data);
+		return data;
+	} catch (error) {
+		console.log(error);
+		return { message: 'Something went wrong' };
+	}
+}
+
+export const checkSentRequest = async (
+	tokenid: string,
+	userAddress: string
+) => {
+	try {
+		const tableName = 'requests_80001_2562';
+		const requesteeAddress = await getOwnerOfToken(tokenid);
+		const getQuery = `SELECT * FROM ${tableName} where address='${requesteeAddress}';`;
+		const getData = await tableland.read(getQuery);
+		let requestObj = null;
+		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
+			requestObj = getData?.rows[0][1];
+			console.log(requestObj)
+			if (requestObj?.[userAddress.toLowerCase()]) {
+				return [true, requestObj];
+			}
+		}
+		return [false, requestObj];
+	} catch (error) {
+		console.log(error);
+		return [false, null];
+	}
+};

@@ -1,7 +1,9 @@
 import { Box, HStack, Text, VStack, chakra, Button } from '@chakra-ui/react';
+import { useMetaMask } from 'metamask-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { user } from '../../utils/types';
+import { checkSentRequest, getOwnerOfToken } from '../utils/utils';
 import Description from './Description';
 import FavNfts from './FavNfts';
 
@@ -10,10 +12,20 @@ type UserCardProps = user;
 const UserCard: React.FC<UserCardProps> = (user) => {
 	//in real app you will get this info from api after doing the call
 	const [requestSent, setRequestSent] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const { account } = useMetaMask();
 
-	const handleUserCardClick = () => {
-		setRequestSent(true);
-		console.log(`user ${user.tokenId} clicked`);
+	const handleUserCardClick = async () => {
+		setLoading(true);
+		const [ifReqSent ,requestObj] = await checkSentRequest(
+			user.tokenId,
+			account || ''
+		);
+		setRequestSent(ifReqSent);
+		if(!ifReqSent){
+			requestObj
+		}
+		setLoading(false);
 	};
 
 	return (
@@ -66,6 +78,7 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 			<Box pt={5}>
 				<Button
 					colorScheme="green"
+					isLoading={loading}
 					onClick={handleUserCardClick}
 					disabled={requestSent}
 				>

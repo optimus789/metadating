@@ -36,9 +36,10 @@ const Searchbar: React.FC<SearchbarProps> = ({
 	country,
 	setCountry,
 }) => {
+	const { account } = useMetaMask();
 	const handleOnClick = async () => {
 		try {
-			let mintedNfts: user[] | [] = await getNFTs();
+			let mintedNfts: user[] | [] = await getNFTs(account);
 			let users = mintedNfts.filter(
 				(user) =>
 					user.name.toLocaleLowerCase().includes(value) ||
