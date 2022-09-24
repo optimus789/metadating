@@ -12,12 +12,12 @@ export default async function update(
 	console.log('something- -------------------------');
 
 	if (req.method === 'POST') {
-		const { address, requestobj } = req.body;
+		const { address, status } = req.body;
 		// console.log('address', address);
-		console.log('requestobj', requestobj, JSON.stringify(requestobj));
-		const updateQuery = `UPDATE ${tableName} SET requestobj='${JSON.stringify(
-			requestobj
-		)}' WHERE address='${address}';`;
+		console.log('requestobj', status);
+		const updateQuery = `UPDATE ${tableName} SET requestobj='${status}' WHERE address='${address}';`;
+		// const senderAddr='0xb7e0bd7f8eae0a33f968a1ffb32de07c749c7390'
+		// const updateQuery = `UPDATE ${tableName} SET address='${address}req${senderAddr}' WHERE address='${address}';`;
 		const updateRes = await tableland.write(updateQuery);
 		console.log('updateRes', updateRes);
 		// const insert = await table.insert({ address, requestobj });

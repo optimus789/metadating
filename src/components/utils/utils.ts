@@ -22,7 +22,6 @@ async function getMetadata(nftTokenId: any, contractAddress: any) {
 			`https://api.covalenthq.com/v1/1/tokens/${contractAddress}/nft_metadata/${nftTokenId}/?key=${process.env.NEXT_PUBLIC_COVALENT_API_KEY}`
 		);
 		const data = await response.json();
-		console.log('nftMetadata of user: ', nftTokenId, ': ', data);
 		const imageUri =
 			data?.data?.items[0]?.nft_data[0]?.external_data?.image || false;
 		return imageUri;
@@ -100,7 +99,6 @@ export async function createMetadatOnIpfs(
 		const client = new NFTStorage({
 			token: process.env.NEXT_PUBLIC_NFT_STORAGE_KEY || '',
 		});
-		console.log('values', values);
 		const nft = {
 			name: values.name,
 			image: values.profilePic,
@@ -129,7 +127,6 @@ export async function mintNFTs(
 	try {
 		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
 		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
-		console.log(nftPortKey, contractAddress);
 		const response = await fetch(
 			`https://api.nftport.xyz/v0/mints/customizable`,
 			{
@@ -147,7 +144,6 @@ export async function mintNFTs(
 			}
 		);
 		const data = await response.json();
-		console.log('data', data);
 		return data?.response === 'OK' ? true : false;
 	} catch (error) {
 		console.log(error);
@@ -206,7 +202,7 @@ export async function mintNFTs(
 // }
 
 // function to fetch contract nfts using covalent API
-export async function getNFTs(userAddress: string | null) {
+export async function getNFTs(userAddress: string | null, xmtp: any) {
 	try {
 		const covalentKey = process.env.NEXT_PUBLIC_COVALENT_API_KEY || '';
 		const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
@@ -220,19 +216,15 @@ export async function getNFTs(userAddress: string | null) {
 			}
 		);
 		const data = await response.json();
-		console.log('data', data);
 		const res = [];
 		const tokenId = await getTokenOfOwner(userAddress);
-
 		const nfts: any[] = data?.data?.items || [];
 		if (nfts.length) {
 			for (let i = 0; i < nfts.length; i++) {
 				const nft = nfts[i];
 				if (nft?.token_id !== tokenId) {
-					const metadata: user | boolean = await getExternalMetadata(
-						nft?.token_id,
-						contractAddress
-					);
+					const metadata: (user & { xmtp: any }) | boolean =
+						await getExternalMetadata(nft?.token_id, contractAddress, xmtp);
 					if (metadata !== false) {
 						res.push(metadata);
 					}
@@ -246,12 +238,16 @@ export async function getNFTs(userAddress: string | null) {
 	}
 }
 
-async function getExternalMetadata(tokenId: string, contractId: string) {
+async function getExternalMetadata(
+	tokenId: string,
+	contractAddr: string,
+	xmtp: any
+) {
 	try {
 		// call retrieve NFT details from nftport api
 		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
 		const response = await fetch(
-			`https://api.nftport.xyz/v0/nfts/${contractId}/${tokenId}?chain=polygon`,
+			`https://api.nftport.xyz/v0/nfts/${contractAddr}/${tokenId}?chain=polygon`,
 			{
 				method: 'GET',
 				headers: {
@@ -260,10 +256,22 @@ async function getExternalMetadata(tokenId: string, contractId: string) {
 				},
 			}
 		);
+		// const alchemyApiUrl = process.env.NEXT_PUBLIC_ALCHEMY_NFT_POLYGON || '';
+		// const response = await fetch(
+		// 	`${alchemyApiUrl}/getNFTMetadata?contractAddress=${contractAddr}&tokenId=${tokenId}`,
+		// 	{
+		// 		method: 'GET',
+		// 		headers: {
+		// 			'Content-Type': 'application/json',
+		// 		},
+		// 	}
+		// );
 		const data = await response.json();
-		console.log(`data for token id ${tokenId}`, data);
+		// if (data?.metadata) {
 		if (data?.response === 'OK') {
+			// const nft = data?.metadata;
 			const nft = data?.nft;
+			console.log('NFT: ', nft);
 			return {
 				name: nft?.metadata?.name,
 				description: nft?.metadata?.description,
@@ -284,7 +292,8 @@ async function getExternalMetadata(tokenId: string, contractId: string) {
 				sex: nft?.metadata?.properties?.sex,
 				country: nft?.metadata?.properties?.country,
 				city: nft?.metadata?.properties?.city,
-				tokenId: nft?.token_id,
+				tokenId: nft?.token_id || data?.id?.tokenId,
+				xmtp: xmtp,
 			};
 		}
 		return false;
@@ -309,10 +318,10 @@ export async function getOwnerOfToken(tokenId: string) {
 export async function getTokenOfOwner(address: string | null) {
 	try {
 		const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
-		console.log(`tokenId of ${address} is: `, tokenId);
 		return String(tokenId);
 	} catch (error) {
-		return ' ';
+		console.log('This user has no token minted to their wallet');
+		return '';
 	}
 }
 
@@ -375,7 +384,6 @@ export async function getRequests(userAddress: string | null) {
 			}),
 		});
 		const data = await response.json();
-		console.log('data', data);
 		return data;
 	} catch (error) {
 		console.log(error);
@@ -393,16 +401,44 @@ export const checkSentRequest = async (
 		const getQuery = `SELECT * FROM ${tableName} where address='${requesteeAddress}';`;
 		const getData = await tableland.read(getQuery);
 		let requestObj = null;
+		let flag = false;
 		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
 			requestObj = getData?.rows[0][1];
-			console.log(requestObj)
 			if (requestObj?.[userAddress.toLowerCase()]) {
-				return [true, requestObj];
+				flag = true;
 			}
 		}
-		return [false, requestObj];
+		return [flag, requestObj, requesteeAddress];
 	} catch (error) {
 		console.log(error);
-		return [false, null];
+		return [false, null, null];
+	}
+};
+
+export const insertRequest = async (
+	requesteeAddress: string,
+	userAddress: string
+) => {
+	try {
+		// fetch post request to backend api on route /api/tableland/insert
+		const response = await fetch(
+			'https://tableland-backend.herokuapp.com/api/insert',
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					requesteeAddress: requesteeAddress.toLowerCase(),
+					userAddress: userAddress.toLowerCase(),
+				}),
+			}
+		);
+		const data = await response.json();
+		console.log('data for insert/update tableland query', data);
+		return data;
+	} catch (error) {
+		console.log(error);
+		return false;
 	}
 };

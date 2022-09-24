@@ -10,10 +10,12 @@ import {
 	VStack,
 } from '@chakra-ui/react';
 import { useMetaMask } from 'metamask-react';
-import { Dispatch, SetStateAction } from 'react';
-import { mockUsers } from '../../utils/mock-data';
+import { Dispatch, SetStateAction, useState } from 'react';
+// import { mockUsers } from '../../utils/mock-data';
 import { user } from '../../utils/types';
 import { getNFTs } from '../utils/utils';
+import { getXmtpClient } from '../utils/xmtpHelper';
+declare let window: any;
 
 interface SearchbarProps {
 	setUsers: Dispatch<SetStateAction<user[] | null>>;
@@ -37,9 +39,14 @@ const Searchbar: React.FC<SearchbarProps> = ({
 	setCountry,
 }) => {
 	const { account } = useMetaMask();
+	const [loading, setLoading] = useState(false);
 	const handleOnClick = async () => {
 		try {
-			const mintedNfts: user[] | [] = await getNFTs(account);
+			setLoading(true);
+			const xmtp = await getXmtpClient(window);
+			const mintedNfts: user[] | [] = await getNFTs(account, xmtp);
+			console.log('mintedNfts are: ', mintedNfts);
+
 			let users = mintedNfts.filter(
 				(user) =>
 					user.name.toLocaleLowerCase().includes(value) ||
@@ -58,6 +65,7 @@ const Searchbar: React.FC<SearchbarProps> = ({
 				);
 			}
 			setUsers(users);
+			setLoading(false);
 		} catch (error) {
 			console.log(error);
 		}
@@ -127,6 +135,7 @@ const Searchbar: React.FC<SearchbarProps> = ({
 							colorScheme="pink"
 							onClick={handleOnClick}
 							disabled={status !== 'connected'}
+							isLoading={loading}
 						>
 							Search
 						</Button>

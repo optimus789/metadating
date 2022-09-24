@@ -10,13 +10,14 @@ export default async function insert(
 	res: NextApiResponse
 ) {
 	console.log('something- -------------------------');
-
+	
 	if (req.method === 'POST') {
-		const { address, requestobj } = req.body;
-		console.log('address', address);
-		console.log('requestobj', requestobj, JSON.stringify(requestobj));
-		const insertQuery = `INSERT INTO ${tableName} (address, requestobj) VALUES ('${address}', '${JSON.stringify(
-			requestobj
+		const { requesteeAddr, userAddress } = req.body;
+		const requestObj = {
+			userAddress: userAddress,
+		  };
+		const insertQuery = `INSERT INTO ${tableName} (address, requestobj) VALUES ('${requesteeAddr}', '${JSON.stringify(
+			requestObj
 		)}');`;
 		const insertRes = await tableland.write(insertQuery);
 		console.log('insertRes', insertRes);
@@ -26,7 +27,8 @@ export default async function insert(
 	} else {
 		// get the data from the table
 		const { address } = req.body;
-		const query = `SELECT * FROM ${tableName} where address='${address}';`;
+		const query = `SELECT * FROM ${tableName} where address LIKE '${address}';`;
+		// const query = `SELECT * FROM ${tableName} where address LIKE '%req%';`;
 		console.log('query', query);
 		const { columns, rows } = await tableland.read(query);
 		console.log(columns, rows);

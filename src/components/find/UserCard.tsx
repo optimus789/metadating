@@ -1,9 +1,10 @@
 import { Box, HStack, Text, VStack, chakra, Button } from '@chakra-ui/react';
 import { useMetaMask } from 'metamask-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { user } from '../../utils/types';
-import { checkSentRequest, getOwnerOfToken } from '../utils/utils';
+import { getOwnerOfToken } from '../utils/utils';
+import { sendMessageXmtp } from '../utils/xmtpHelper';
 import Description from './Description';
 import FavNfts from './FavNfts';
 
@@ -14,17 +15,30 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 	const [requestSent, setRequestSent] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const { account } = useMetaMask();
-
+	
 	const handleUserCardClick = async () => {
 		setLoading(true);
-		const [ifReqSent ,requestObj] = await checkSentRequest(
-			user.tokenId,
-			account || ''
-		);
-		setRequestSent(ifReqSent);
-		if(!ifReqSent){
-			requestObj
-		}
+		// const [ifReqSent ,requestObj, requesteeAddr] = await checkSentRequest(
+		// 	user.tokenId,
+		// 	account || ''
+		// );
+		// if(!ifReqSent){
+		// 	if(!requestObj){
+
+		// 	}
+		// 	console.log('requestObj', requesteeAddr);
+		// }
+		console.log(user.tokenId);
+
+		// const xmtpConnect = await Client.create(xmtpSigner, { env: 'dev' });
+		const xmtpConnect = user.xmtp;
+		const senderAddr = account || '';
+		const requesteeAddr = await getOwnerOfToken(user.tokenId);
+		const messageXmtp = await sendMessageXmtp(xmtpConnect, user, senderAddr);
+		console.log('xmtp', xmtpConnect);
+		// const conversations = await xmtp.conversations.list()
+		// console.log('conversations', conversations);
+		setRequestSent(true);
 		setLoading(false);
 	};
 

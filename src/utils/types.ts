@@ -5,6 +5,7 @@ export type user = registerInput & {
 	nft2Img: any;
 	nft3Img: any;
 	tokenId: string;
+	xmtp?: any 
 };
 
 export type request = {
