@@ -11,13 +11,14 @@ function defineNextConfig(config) {
 }
 
 export default defineNextConfig({
-	reactStrictMode: true,
+	// reactStrictMode: true,
 	images: {
 		domains: [
 			'ipfs.io',
 			'cloudflare-ipfs.com',
 			'ikzttp.mypinata.cloud',
 			'live---metadata-5covpqijaa-uc.a.run.app',
+			'nftstorage.link',
 		], // <== Domain name
 	},
 	swcMinify: true,
@@ -25,7 +26,7 @@ export default defineNextConfig({
 
 webpack: (config, { isServer }) => {
 	if (!isServer) {
-	  config.resolve.fallback.fs = false
+		config.resolve.fallback.fs = false;
 	}
-	return config
-  }
+	return config;
+};

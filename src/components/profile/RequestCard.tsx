@@ -1,17 +1,65 @@
 import { Box, HStack, VStack, Text, Button, Stack } from '@chakra-ui/react';
-import { format } from 'date-fns';
+import { useMetaMask } from 'metamask-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 import { request } from '../../utils/types';
+import { getOwnerOfToken, sendRequest } from '../utils/utils';
 
 type RequestCardProps = request;
 
-const RequestCard: React.FC<RequestCardProps> = ({ createdAt, from }) => {
-	const handleAccept = () => {
+const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
+	const [loadingA, setLoadingA] = useState(false);
+	const [loadingD, setLoadingD] = useState(false);
+	const [acceptDisable, setAcceptDisable] = useState(false);
+	const [rejectDisable, setRejectDisable] = useState(false);
+	const [userMsg, setUserMsg] = useState('');
+	const [nextLink, setNextLink] = useState('/profile');
+	const { account } = useMetaMask();
+
+	const handleAccept = async () => {
+		setLoadingA(true);
+		const senderAddress = await getOwnerOfToken(from.tokenId);
+		if (senderAddress.length) {
+			const sendAcceptedUpdate = await sendRequest(
+				account || '',
+				senderAddress,
+				'accepted',
+				true
+			);
+			if (sendAcceptedUpdate) {
+				setAcceptDisable(true);
+				setRejectDisable(true);
+				setNextLink('xmtp.vercel.app/dm/' + senderAddress);
+				setUserMsg('accepted');
+			}
+		}
 		console.log('accept');
+		setLoadingA(false);
 	};
 
-	const handleDecline = () => {
+	const handleDecline = async () => {
+		setLoadingD(true);
+
+		const senderAddress = await getOwnerOfToken(from.tokenId);
+		if (senderAddress.length) {
+			const sendAcceptedUpdate = await sendRequest(
+				account || '',
+				senderAddress,
+				'declined',
+				true
+			);
+			if (sendAcceptedUpdate) {
+				setAcceptDisable(true);
+				setRejectDisable(true);
+				setNextLink('xmtp.vercel.app');
+				setUserMsg('declined');
+			}
+		}
+		
 		console.log('decline');
+		setLoadingD(false);
+
 	};
 
 	return (
@@ -57,15 +105,35 @@ const RequestCard: React.FC<RequestCardProps> = ({ createdAt, from }) => {
 				<Text color="white">
 					{from.city}, {from.country}
 				</Text>
-				<Text color="white">Sent on: {format(createdAt, 'dd.MM.yyyy')}</Text>
+				{/* <Text color="white">Sent on: {format(createdAt, 'dd.MM.yyyy')}</Text> */}
 			</VStack>
 			<HStack>
-				<Button colorScheme="green" onClick={handleAccept}>
-					Accept
-				</Button>
-				<Button colorScheme="red" onClick={handleDecline}>
-					Decline
-				</Button>
+				{!acceptDisable && (
+					<Button colorScheme="green" disabled={loadingA} onClick={handleAccept}>
+						Accept
+					</Button>
+				)}
+				{!rejectDisable && (
+					<Button colorScheme="red" disabled={loadingD} onClick={handleDecline}>
+						Decline
+					</Button>
+				)}
+				{rejectDisable && acceptDisable && userMsg === 'accepted' && (
+					<Link key="xmtpLink" href={nextLink}>
+						<a target="_blank">
+							<Text color="white">Accepted, Click here to start chatting</Text>
+						</a>
+					</Link>
+				)}
+				{rejectDisable && acceptDisable && userMsg === 'declined' && (
+					<Link key="xmtpLink" href={nextLink}>
+						<a target="_blank">
+							<Text color="white">
+								Request Declined, Click here to check old messages
+							</Text>
+						</a>
+					</Link>
+				)}
 			</HStack>
 		</Stack>
 	);

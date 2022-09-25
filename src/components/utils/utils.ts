@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connect } from '@tableland/sdk';
+import { Client } from '@xmtp/xmtp-js';
 import { ethers } from 'ethers';
 import { NFTStorage } from 'nft.storage';
 import { EncodedURL } from 'nft.storage/dist/src/lib/interface';
@@ -218,12 +220,13 @@ export async function getNFTs(userAddress: string | null, xmtp: any) {
 		const data = await response.json();
 		const res = [];
 		const tokenId = await getTokenOfOwner(userAddress);
+
 		const nfts: any[] = data?.data?.items || [];
-		if (nfts.length) {
+		if (nfts.length && tokenId.length !== 0) {
 			for (let i = 0; i < nfts.length; i++) {
 				const nft = nfts[i];
 				if (nft?.token_id !== tokenId) {
-					const metadata: (user & { xmtp: any }) | boolean =
+					const metadata: (user & { xmtp: Client }) | boolean =
 						await getExternalMetadata(nft?.token_id, contractAddress, xmtp);
 					if (metadata !== false) {
 						res.push(metadata);
@@ -231,19 +234,20 @@ export async function getNFTs(userAddress: string | null, xmtp: any) {
 				}
 			}
 		}
-		return nfts.length ? res : [];
+		return nfts.length && tokenId.length !== 0 ? res : [];
 	} catch (error) {
 		console.log(error);
 		return [];
 	}
 }
 
-async function getExternalMetadata(
+export async function getExternalMetadata(
 	tokenId: string,
-	contractAddr: string,
-	xmtp: any
+	contractAddr?: string,
+	xmtp: any = null
 ) {
 	try {
+		contractAddr = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
 		// call retrieve NFT details from nftport api
 		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
 		const response = await fetch(
@@ -277,7 +281,7 @@ async function getExternalMetadata(
 				description: nft?.metadata?.description,
 				profilePic: nft?.metadata?.image.replace(
 					'ipfs://',
-					'https://ipfs.io/ipfs/'
+					'https://nftstorage.link/ipfs/'
 				),
 				'favNFT1-tokenID': 'null',
 				'favNFT1-contractAddress': 'null',
@@ -304,10 +308,10 @@ async function getExternalMetadata(
 }
 
 // function get the owner of tokenid using etherjs
-export async function getOwnerOfToken(tokenId: string) {
+export async function getOwnerOfToken(tokenId: string): Promise<string> {
 	try {
 		const owner = await contract.ownerOf(tokenId);
-		return owner.toLowerCase();
+		return owner || '';
 	} catch (error) {
 		console.log(error);
 		return '';
@@ -320,53 +324,8 @@ export async function getTokenOfOwner(address: string | null) {
 		const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
 		return String(tokenId);
 	} catch (error) {
-		console.log('This user has no token minted to their wallet');
+		console.log('This user has no token minted to their wallet', error);
 		return '';
-	}
-}
-
-// function to send the requests to API
-export async function sendRequest(
-	requesteeAddress: string,
-	requestObj: string,
-	insertQuery: boolean
-) {
-	try {
-		let response;
-		if (insertQuery) {
-			// tableland backend api POST insert query
-			response = await fetch(
-				'https://tableland-backend.herokuapp.com/api/insert',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						requesteeAddress,
-						requestObj,
-					}),
-				}
-			);
-		} else {
-			response = await fetch(`/api/request`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					address: requesteeAddress,
-					requestObj,
-				}),
-			});
-		}
-
-		const data = await response.json();
-		console.log('data for insert/update tableland query', data);
-		return data;
-	} catch (error) {
-		console.log(error);
-		return { message: error };
 	}
 }
 
@@ -393,52 +352,131 @@ export async function getRequests(userAddress: string | null) {
 
 export const checkSentRequest = async (
 	tokenid: string,
-	userAddress: string
-) => {
+	senderAddress: string
+): Promise<[string, string]> => {
 	try {
 		const tableName = 'requests_80001_2562';
-		const requesteeAddress = await getOwnerOfToken(tokenid);
-		const getQuery = `SELECT * FROM ${tableName} where address='${requesteeAddress}';`;
+		const requesteeAddress: string = await getOwnerOfToken(tokenid);
+		console.log('requesteeAddress: ---------- ', requesteeAddress);
+		const getQuery = `SELECT * FROM ${tableName} where address LIKE '${requesteeAddress.toLowerCase()}req${senderAddress}';`;
 		const getData = await tableland.read(getQuery);
-		let requestObj = null;
-		let flag = false;
+		console.log('getData', getData, ' | getData', getQuery);
+		let status = '';
 		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
-			requestObj = getData?.rows[0][1];
-			if (requestObj?.[userAddress.toLowerCase()]) {
-				flag = true;
-			}
+			status = getData?.rows[0][1];
 		}
-		return [flag, requestObj, requesteeAddress];
+		console.log('Status inside: ', status);
+		return [status, requesteeAddress];
 	} catch (error) {
 		console.log(error);
-		return [false, null, null];
+		return ['', ''];
 	}
 };
 
-export const insertRequest = async (
+export const getTablelandRequests = async (
 	requesteeAddress: string,
-	userAddress: string
-) => {
+	requestType = 'requested',
+	customQuery = true
+): Promise<any[]> => {
 	try {
-		// fetch post request to backend api on route /api/tableland/insert
-		const response = await fetch(
-			'https://tableland-backend.herokuapp.com/api/insert',
-			{
+		const tableName = 'requests_80001_2562';
+		// const requesteeAddress: string = await getOwnerOfToken(tokenid);
+		// console.log('requesteeAddress: ---------- ', requesteeAddress);
+		const firstParameter = customQuery
+			? `${requesteeAddress.toLowerCase()}req%`
+			: `${requesteeAddress.toLowerCase()}`;
+		const getQuery = `SELECT * FROM ${tableName} where address LIKE '${firstParameter}' AND requestobj='${requestType}';`;
+		const getData = await tableland.read(getQuery);
+		console.log('getData', getData, ' \n | getData', getQuery);
+		let status = [];
+		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
+			status = getData?.rows;
+		}
+		console.log('Status inside: ', status);
+		return status;
+	} catch (error) {
+		console.log(error);
+		return [];
+	}
+};
+
+export const getUsersFromRequests = async (requests: any) => {
+	console.log(requests);
+	return 'a';
+};
+
+// export const insertRequest = async (
+// 	requesteeAddress: string,
+// 	userAddress: string,
+// ) => {
+// 	try {
+// 		// fetch post request to backend api on route /api/tableland/insert
+// 		const response = await fetch(
+// 			'https://tableland-backend.herokuapp.com/api/insert',
+// 			{
+// 				method: 'POST',
+// 				headers: {
+// 					'Content-Type': 'application/json',
+// 				},
+// 				body: JSON.stringify({
+// 					requesteeAddress: requesteeAddress.toLowerCase(),
+// 					userAddress: userAddress.toLowerCase(),
+// 				}),
+// 			}
+// 		);
+// 		const data = await response.json();
+// 		console.log('data for insert/update tableland query', data);
+// 		return data;
+// 	} catch (error) {
+// 		console.log(error);
+// 		return false;
+// 	}
+// };
+
+// function to send the requests to API
+export async function sendRequest(
+	requesteeAddress: string,
+	sendAddress: string,
+	status: string,
+	isUpdate = false
+) {
+	try {
+		let response;
+		const address =
+			requesteeAddress.toLowerCase() + 'req' + sendAddress.toLowerCase();
+		console.log('address concatenated: ', address);
+		const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || '';
+
+		if (!isUpdate) {
+			// tableland backend api POST insert query
+			response = await fetch(`${backendBaseUrl}/api/tableland/insert`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					requesteeAddress: requesteeAddress.toLowerCase(),
-					userAddress: userAddress.toLowerCase(),
+					address: address,
+					status: status,
 				}),
-			}
-		);
-		const data = await response.json();
+			});
+		} else {
+			response = await fetch(`${backendBaseUrl}/api/tableland/update`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					address: address,
+					status: status,
+				}),
+			});
+		}
+
+		const data = await response?.json();
 		console.log('data for insert/update tableland query', data);
-		return data;
+		return data || false;
 	} catch (error) {
 		console.log(error);
 		return false;
 	}
-};
+}

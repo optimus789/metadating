@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WidgetProps } from '@worldcoin/id';
+import { ethers } from 'ethers';
 import { useMetaMask } from 'metamask-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
@@ -30,12 +31,16 @@ import ProfilePicInput from '../register-form/ProfilePicInput';
 import RegisterInput from '../register-form/RegisterInput';
 import RegisterTextarea from '../register-form/RegisterTextarea';
 import SexInput from '../register-form/SexInput';
+import { optInChannel } from '../utils/epnsHelper';
 import {
 	createMetadatOnIpfs,
 	getImagesMetadata,
 	mintNFTs,
 	verifyWorldId,
 } from '../utils/utils';
+import { getXmtpClient } from '../utils/xmtpHelper';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let window: any;
 
 interface RegisterModalProps {
 	isOpen: boolean;
@@ -45,7 +50,7 @@ interface RegisterModalProps {
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 	const { account } = useMetaMask();
 	const router = useRouter();
-	const [isActive, setIsActive] = useState(false);
+	const [isActive, setIsActive] = useState(true); // this needs to  be turned off once worldcoin app runs successfully and not giving any error
 	const {
 		register,
 		handleSubmit,
@@ -65,6 +70,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 		if (!values.profilePic) {
 			setError('profilePic', { message: 'Profile picture is required' });
 		}
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		const signer = provider.getSigner();
+		const optInObject = await optInChannel(signer, account || '');
+		console.log('opted In EPNS channel Object: ', optInObject);
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const xmtp = await getXmtpClient(window);
 		console.log(`Values:`, values);
 		console.log('account', account);
 		const favNftsTokenId = [

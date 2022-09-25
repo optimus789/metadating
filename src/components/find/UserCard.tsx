@@ -3,7 +3,7 @@ import { useMetaMask } from 'metamask-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { user } from '../../utils/types';
-import { getOwnerOfToken } from '../utils/utils';
+import { checkSentRequest, sendRequest } from '../utils/utils';
 import { sendMessageXmtp } from '../utils/xmtpHelper';
 import Description from './Description';
 import FavNfts from './FavNfts';
@@ -14,32 +14,53 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 	//in real app you will get this info from api after doing the call
 	const [requestSent, setRequestSent] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [reqMsg, setReqMsg] = useState('Send Request');
 	const { account } = useMetaMask();
-	
+
 	const handleUserCardClick = async () => {
-		setLoading(true);
-		// const [ifReqSent ,requestObj, requesteeAddr] = await checkSentRequest(
-		// 	user.tokenId,
-		// 	account || ''
-		// );
-		// if(!ifReqSent){
-		// 	if(!requestObj){
+		try {
+			setLoading(true);
+			const [status, requesteeAddr]: [string, string] = await checkSentRequest(
+				user.tokenId,
+				account ? account.toLowerCase() : ''
+			);
 
-		// 	}
-		// 	console.log('requestObj', requesteeAddr);
-		// }
-		console.log(user.tokenId);
+			console.log(status, requesteeAddr);
+			if (!status?.length) {
+				const xmtpConnect = user.xmtp;
+				const senderAddr = account || '';
+				const messageXmtp = await sendMessageXmtp(
+					xmtpConnect,
+					user,
+					senderAddr,
+					requesteeAddr
+				);
+				if (messageXmtp) {
+					const requestSent = await sendRequest(
+						requesteeAddr,
+						senderAddr,
+						'requested',
+						false
+					);
+					console.log(requestSent);
+				}
+				setReqMsg('Request sent');
+			} else if (status === 'requested') {
+				setReqMsg('Request Already Sent');
+			} else if (status === 'accepted') {
+				setReqMsg('Request Accepted, Go to Profile Page');
+			} else if (status === 'declined') {
+				setReqMsg('User Declined Request');
+			}
 
-		// const xmtpConnect = await Client.create(xmtpSigner, { env: 'dev' });
-		const xmtpConnect = user.xmtp;
-		const senderAddr = account || '';
-		const requesteeAddr = await getOwnerOfToken(user.tokenId);
-		const messageXmtp = await sendMessageXmtp(xmtpConnect, user, senderAddr);
-		console.log('xmtp', xmtpConnect);
-		// const conversations = await xmtp.conversations.list()
-		// console.log('conversations', conversations);
-		setRequestSent(true);
-		setLoading(false);
+			console.log('status', requesteeAddr, status);
+
+			setRequestSent(true); // revert this back to true before git push
+			setLoading(false);
+		} catch (error) {
+			setLoading(true);
+			setRequestSent(false);
+		}
 	};
 
 	return (
@@ -96,7 +117,7 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 					onClick={handleUserCardClick}
 					disabled={requestSent}
 				>
-					{requestSent ? 'Request sent' : 'Send Request'}
+					{reqMsg}
 				</Button>
 			</Box>
 		</VStack>

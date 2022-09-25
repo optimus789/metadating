@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
 	Box,
 	Button,
@@ -9,12 +10,16 @@ import {
 	Tooltip,
 	VStack,
 } from '@chakra-ui/react';
+import { Client } from '@xmtp/xmtp-js';
+import { ethers } from 'ethers';
 import { useMetaMask } from 'metamask-react';
 import { Dispatch, SetStateAction, useState } from 'react';
 // import { mockUsers } from '../../utils/mock-data';
 import { user } from '../../utils/types';
+import { optInChannel } from '../utils/epnsHelper';
 import { getNFTs } from '../utils/utils';
 import { getXmtpClient } from '../utils/xmtpHelper';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
 interface SearchbarProps {
@@ -42,8 +47,11 @@ const Searchbar: React.FC<SearchbarProps> = ({
 	const [loading, setLoading] = useState(false);
 	const handleOnClick = async () => {
 		try {
+			// const provider = new ethers.providers.Web3Provider(window.ethereum);
+			// const signer = provider.getSigner();
+			// const optInObject = await optInChannel(signer, account || '');
 			setLoading(true);
-			const xmtp = await getXmtpClient(window);
+			const xmtp: Client | boolean = await getXmtpClient(window);
 			const mintedNfts: user[] | [] = await getNFTs(account, xmtp);
 			console.log('mintedNfts are: ', mintedNfts);
 

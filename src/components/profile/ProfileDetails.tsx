@@ -67,7 +67,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
 				nft1Img={user.nft1Img}
 				nft2Img={user.nft2Img}
 				nft3Img={user.nft3Img}
-				size={70}
+				size={135}
 				textFontSize="2xl"
 			/>
 		</VStack>
