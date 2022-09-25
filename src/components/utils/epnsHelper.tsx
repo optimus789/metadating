@@ -1,5 +1,6 @@
 import * as EpnsAPI from '@epnsproject/sdk-restapi';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const optInChannel = async (signer: any, address: string) => {
 	try {
 		const channelAddress = process.env.NEXT_PUBLIC_CHANNEL_ADDR;
