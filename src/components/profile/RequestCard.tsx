@@ -14,7 +14,8 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 	const [acceptDisable, setAcceptDisable] = useState(false);
 	const [rejectDisable, setRejectDisable] = useState(false);
 	const [userMsg, setUserMsg] = useState('');
-	const [nextLink, setNextLink] = useState('/profile');
+	const baseUrl = String(process.env.NEXT_PUBLIC_BACKEND_BASE_URL);
+	const [nextLink, setNextLink] = useState(`${baseUrl}/profile`);
 	const { account } = useMetaMask();
 
 	const handleAccept = async () => {
@@ -30,7 +31,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 			if (sendAcceptedUpdate) {
 				setAcceptDisable(true);
 				setRejectDisable(true);
-				setNextLink('xmtp.vercel.app/dm/' + senderAddress);
+				setNextLink('https://xmtp.vercel.app/dm/' + senderAddress);
 				setUserMsg('accepted');
 			}
 		}
@@ -51,13 +52,12 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 			if (sendAcceptedUpdate) {
 				setAcceptDisable(true);
 				setRejectDisable(true);
-				setNextLink('xmtp.vercel.app');
+				setNextLink('https://xmtp.vercel.app');
 				setUserMsg('declined');
 			}
 		}
-		
-		setLoadingD(false);
 
+		setLoadingD(false);
 	};
 
 	return (
@@ -107,12 +107,20 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 			</VStack>
 			<HStack>
 				{!acceptDisable && (
-					<Button colorScheme="green" isLoading={loadingA} onClick={handleAccept}>
+					<Button
+						colorScheme="green"
+						isLoading={loadingA}
+						onClick={handleAccept}
+					>
 						Accept
 					</Button>
 				)}
 				{!rejectDisable && (
-					<Button colorScheme="red" isLoading={loadingD} onClick={handleDecline}>
+					<Button
+						colorScheme="red"
+						isLoading={loadingD}
+						onClick={handleDecline}
+					>
 						Decline
 					</Button>
 				)}
