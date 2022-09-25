@@ -25,7 +25,6 @@ const UserCard: React.FC<UserCardProps> = (user) => {
 				account ? account.toLowerCase() : ''
 			);
 
-			console.log(status, requesteeAddr);
 			if (!status?.length) {
 				const xmtpConnect = user.xmtp;
 				const senderAddr = account || '';

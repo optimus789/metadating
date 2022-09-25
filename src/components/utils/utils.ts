@@ -275,7 +275,6 @@ export async function getExternalMetadata(
 		if (data?.response === 'OK') {
 			// const nft = data?.metadata;
 			const nft = data?.nft;
-			console.log('NFT: ', nft);
 			return {
 				name: nft?.metadata?.name,
 				description: nft?.metadata?.description,
@@ -329,26 +328,26 @@ export async function getTokenOfOwner(address: string | null) {
 	}
 }
 
-// function to get the requests from API
-export async function getRequests(userAddress: string | null) {
-	try {
-		if (null) return;
-		const response = await fetch(`/api/request`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				userAddress,
-			}),
-		});
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.log(error);
-		return { message: 'Something went wrong' };
-	}
-}
+// // function to get the requests from API
+// export async function getRequests(userAddress: string | null) {
+// 	try {
+// 		if (null) return;
+// 		const response = await fetch(`/api/request`, {
+// 			method: 'GET',
+// 			headers: {
+// 				'Content-Type': 'application/json',
+// 			},
+// 			body: JSON.stringify({
+// 				userAddress,
+// 			}),
+// 		});
+// 		const data = await response.json();
+// 		return data;
+// 	} catch (error) {
+// 		console.log(error);
+// 		return { message: 'Something went wrong' };
+// 	}
+// }
 
 export const checkSentRequest = async (
 	tokenid: string,
@@ -387,7 +386,6 @@ export const getTablelandRequests = async (
 			: `${requesteeAddress.toLowerCase()}`;
 		const getQuery = `SELECT * FROM ${tableName} where address LIKE '${firstParameter}' AND requestobj='${requestType}';`;
 		const getData = await tableland.read(getQuery);
-		console.log('getData', getData, ' \n | getData', getQuery);
 		let status = [];
 		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
 			status = getData?.rows;
@@ -398,11 +396,6 @@ export const getTablelandRequests = async (
 		console.log(error);
 		return [];
 	}
-};
-
-export const getUsersFromRequests = async (requests: any) => {
-	console.log(requests);
-	return 'a';
 };
 
 // export const insertRequest = async (
@@ -444,7 +437,6 @@ export async function sendRequest(
 		let response;
 		const address =
 			requesteeAddress.toLowerCase() + 'req' + sendAddress.toLowerCase();
-		console.log('address concatenated: ', address);
 		const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || '';
 
 		if (!isUpdate) {

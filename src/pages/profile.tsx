@@ -29,12 +29,10 @@ const ProfilePage: NextPage = () => {
 			if (xmtp) {
 				const address = xmtp ? xmtp.address : '';
 				const contractAddr = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
-				console.log('contractAddr', address);
 				const tokenId = await getTokenOfOwner(address);
 				if (tokenId === '') {
 					router.push('/');
 				}
-				console.log(address, tokenId);
 				const userMetadata = await getExternalMetadata(
 					tokenId,
 					contractAddr,

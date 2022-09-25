@@ -21,19 +21,18 @@ export async function sendMessageXmtp(
 		const conversation = await xmtp.conversations.newConversation(
 			requesteeAddr
 		);
-		console.log('conversation', conversation);
-		const message = `Hello ${user.name}, I am ${
-			senderUser ? senderUser.name : 'someone'
+		const message = `Hello, I am ${
+			senderUser ? senderUser.name : 'Stranger'
 		} How are you? I saw your profile on Metadating and I would like to connect with you.`;
-		console.log(message);
 		const res = await conversation.send(message);
 		if (res?.id) {
 			const url = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 			const msg = `Hi ${user.name}, you have a new request from ${
 				senderUser ? senderUser?.name : 'Metadating'
 			}.`;
-			const bodyPayload =
-				'Please check your Profile Page - https://metadating-27y58.ondigitalocean.app/profile';
+			const bodyPayload = `Hi ${user.name}, you have a new request from ${
+				senderUser ? senderUser?.name : 'Metadating'
+			}.Please check your Profile Page - [u:https://metadating-27y58.ondigitalocean.app/profile]`;
 			//fetch POST api backend to send notification
 			const sentNotif = await fetch(`${url}/api/epns`, {
 				method: 'POST',

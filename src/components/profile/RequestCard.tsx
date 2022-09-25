@@ -34,7 +34,6 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 				setUserMsg('accepted');
 			}
 		}
-		console.log('accept');
 		setLoadingA(false);
 	};
 
@@ -57,7 +56,6 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 			}
 		}
 		
-		console.log('decline');
 		setLoadingD(false);
 
 	};
