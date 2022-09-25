@@ -107,12 +107,12 @@ const RequestCard: React.FC<RequestCardProps> = ({ from }) => {
 			</VStack>
 			<HStack>
 				{!acceptDisable && (
-					<Button colorScheme="green" disabled={loadingA} onClick={handleAccept}>
+					<Button colorScheme="green" isLoading={loadingA} onClick={handleAccept}>
 						Accept
 					</Button>
 				)}
 				{!rejectDisable && (
-					<Button colorScheme="red" disabled={loadingD} onClick={handleDecline}>
+					<Button colorScheme="red" isLoading={loadingD} onClick={handleDecline}>
 						Decline
 					</Button>
 				)}

@@ -50,7 +50,7 @@ interface RegisterModalProps {
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 	const { account } = useMetaMask();
 	const router = useRouter();
-	const [isActive, setIsActive] = useState(true); // this needs to  be turned off once worldcoin app runs successfully and not giving any error
+	const [isActive, setIsActive] = useState(false); // this needs to  be turned off once worldcoin app runs successfully and not giving any error
 	const {
 		register,
 		handleSubmit,
@@ -90,7 +90,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 		];
 		const imagesMetadata: string[] | boolean = await getImagesMetadata(
 			favNftsTokenId,
-			favNftsContractAddr
+			favNftsContractAddr,
+			account || ''
 		);
 		if (!imagesMetadata) return;
 
@@ -236,7 +237,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 								if (verifyStatus) {
 									setIsActive(!isActive);
 								}
-								// const verifyStatus = await verifyWorldId();
 							}}
 							onError={(error) => console.error(error)}
 						/>

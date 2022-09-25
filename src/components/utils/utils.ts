@@ -17,15 +17,29 @@ const provider = new ethers.providers.JsonRpcProvider(
 const contractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
 
 const contract = new ethers.Contract(contractAddress, abi, provider);
-async function getMetadata(nftTokenId: any, contractAddress: any) {
+async function getMetadata(
+	nftTokenId: any,
+	contractAddress: any,
+	address: string
+) {
 	try {
 		// get metadata from contract using Covalent API
 		const response = await fetch(
 			`https://api.covalenthq.com/v1/1/tokens/${contractAddress}/nft_metadata/${nftTokenId}/?key=${process.env.NEXT_PUBLIC_COVALENT_API_KEY}`
 		);
 		const data = await response.json();
-		const imageUri =
-			data?.data?.items[0]?.nft_data[0]?.external_data?.image || false;
+		let imageUri;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const ownerAddress =
+			data?.data?.items[0]?.nft_data[0]?.owner_address.toLowerCase();
+		//if the nft is owned by the user (commented for the sake of hackathon)
+		// if (ownerAddress === address.toLowerCase()) {
+		// eslint-disable-next-line prefer-const
+		imageUri = data?.data?.items[0]?.nft_data[0]?.external_data?.image || false;
+		// }else{
+		// 	imageUri = false
+		// }
+
 		return imageUri;
 	} catch (error) {
 		console.log(error);
@@ -36,15 +50,22 @@ async function getMetadata(nftTokenId: any, contractAddress: any) {
 // get image metadata of 3 favorite NFTs
 export async function getImagesMetadata(
 	nftTokenIds: string[],
-	contractAddress: string[]
+	contractAddress: string[],
+	address: string
 ) {
 	try {
 		const imagesMetadata: any[] = [];
 		let errorCaught = false;
 		for (let i = 0; i < nftTokenIds.length; i++) {
-			const nftMetadata = await getMetadata(nftTokenIds[i], contractAddress[i]);
+			const nftMetadata = await getMetadata(
+				nftTokenIds[i],
+				contractAddress[i],
+				address
+			);
 			if (nftMetadata === false) {
-				alert('Wrong token id or contract address provided, please try again');
+				alert(
+					'Wrong token id or contract address provided, please try again by adding nfts that you own'
+				);
 				errorCaught = true;
 				break;
 			} else {
@@ -86,7 +107,7 @@ export async function verifyWorldId(
 		if (data?.code === 'already_verified') {
 			alert(data?.detail);
 		}
-		return data?.success === true ? true : false || true; //remove || true if it is there
+		return data?.success === true ? true : false; //remove || true if it is there
 	} catch (error) {
 		console.log(error);
 		return false;
@@ -250,35 +271,55 @@ export async function getExternalMetadata(
 		contractAddr = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
 		// call retrieve NFT details from nftport api
 		const nftPortKey = process.env.NEXT_PUBLIC_NFTPORT_API_KEY || '';
-		const response = await fetch(
-			`https://api.nftport.xyz/v0/nfts/${contractAddr}/${tokenId}?chain=polygon`,
-			{
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: nftPortKey,
-				},
-			}
-		);
-		// const alchemyApiUrl = process.env.NEXT_PUBLIC_ALCHEMY_NFT_POLYGON || '';
 		// const response = await fetch(
-		// 	`${alchemyApiUrl}/getNFTMetadata?contractAddress=${contractAddr}&tokenId=${tokenId}`,
+		// 	`https://api.nftport.xyz/v0/nfts/${contractAddr}/${tokenId}?chain=polygon`,
 		// 	{
 		// 		method: 'GET',
 		// 		headers: {
 		// 			'Content-Type': 'application/json',
+		// 			Authorization: nftPortKey,
 		// 		},
 		// 	}
 		// );
+		const alchemyApiUrl = process.env.NEXT_PUBLIC_ALCHEMY_NFT_POLYGON || '';
+		const response = await fetch(
+			`${alchemyApiUrl}/getNFTMetadata?contractAddress=${contractAddr}&tokenId=${tokenId}`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}
+		);
 		const data = await response.json();
-		// if (data?.metadata) {
-		if (data?.response === 'OK') {
-			// const nft = data?.metadata;
-			const nft = data?.nft;
+		if (data?.metadata) {
+		// if (data?.response === 'OK') {
+			const nft = data?.metadata;
+			// const nft = data?.nft;
+			console.log(nft)
 			return {
-				name: nft?.metadata?.name,
-				description: nft?.metadata?.description,
-				profilePic: nft?.metadata?.image.replace(
+				// name: nft?.metadata?.name,
+				// description: nft?.metadata?.description,
+				// profilePic: nft?.metadata?.image.replace(
+				// 	'ipfs://',
+				// 	'https://nftstorage.link/ipfs/'
+				// ),
+				// 'favNFT1-tokenID': 'null',
+				// 'favNFT1-contractAddress': 'null',
+				// 'favNFT2-tokenID': 'null',
+				// 'favNFT2-contractAddress': 'null',
+				// 'favNFT3-tokenID': 'null',
+				// 'favNFT3-contractAddress': 'null',
+				// nft1Img: nft?.metadata?.properties?.fav_nfts_images[0],
+				// nft2Img: nft?.metadata?.properties?.fav_nfts_images[1],
+				// nft3Img: nft?.metadata?.properties?.fav_nfts_images[2],
+				// age: nft?.metadata?.properties?.age,
+				// sex: nft?.metadata?.properties?.sex,
+				// country: nft?.metadata?.properties?.country,
+				// city: nft?.metadata?.properties?.city,
+				name: nft?.name,
+				description: nft?.description,
+				profilePic: nft?.image.replace(
 					'ipfs://',
 					'https://nftstorage.link/ipfs/'
 				),
@@ -288,13 +329,13 @@ export async function getExternalMetadata(
 				'favNFT2-contractAddress': 'null',
 				'favNFT3-tokenID': 'null',
 				'favNFT3-contractAddress': 'null',
-				nft1Img: nft?.metadata?.properties?.fav_nfts_images[0],
-				nft2Img: nft?.metadata?.properties?.fav_nfts_images[1],
-				nft3Img: nft?.metadata?.properties?.fav_nfts_images[2],
-				age: nft?.metadata?.properties?.age,
-				sex: nft?.metadata?.properties?.sex,
-				country: nft?.metadata?.properties?.country,
-				city: nft?.metadata?.properties?.city,
+				nft1Img: nft?.properties?.fav_nfts_images[0],
+				nft2Img: nft?.properties?.fav_nfts_images[1],
+				nft3Img: nft?.properties?.fav_nfts_images[2],
+				age: nft?.properties?.age,
+				sex: nft?.properties?.sex,
+				country: nft?.properties?.country,
+				city: nft?.properties?.city,
 				tokenId: nft?.token_id || data?.id?.tokenId,
 				xmtp: xmtp,
 			};
@@ -359,7 +400,6 @@ export const checkSentRequest = async (
 		console.log('requesteeAddress: ---------- ', requesteeAddress);
 		const getQuery = `SELECT * FROM ${tableName} where address LIKE '${requesteeAddress.toLowerCase()}req${senderAddress}';`;
 		const getData = await tableland.read(getQuery);
-		console.log('getData', getData, ' | getData', getQuery);
 		let status = '';
 		if (Array.isArray(getData?.rows) && getData?.rows.length > 0) {
 			status = getData?.rows[0][1];
